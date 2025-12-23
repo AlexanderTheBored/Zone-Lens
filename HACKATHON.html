@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ZoneGuide – Mandaue Analysis</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+
+<style>
+  body { margin:0; padding:0; font-family:system-ui,sans-serif; background:#000; color:#fff; }
+  #map { position:absolute; top:0; bottom:0; width:100%; }
+
+  .controls{
+    position:absolute; top:20px; left:20px;
+    background:rgba(10,10,10,0.9);
+    border:1px solid #333;
+    padding:20px; width:260px; z-index:10;
+  }
+  .controls h3{
+    margin:0 0 15px 0; font-size:14px; text-transform:uppercase; letter-spacing:1px;
+    color:#888; border-bottom:1px solid #333; padding-bottom:10px;
+  }
+  .filter-btn{
+    display:block; width:100%;
+    padding:12px; margin-bottom:8px;
+    background:transparent; border:1px solid #444;
+    color:#ccc; cursor:pointer; font-size:13px; text-align:left; text-transform:uppercase;
+  }
+  .filter-btn:hover{ border-color:#fff; color:#fff; }
+  .filter-btn.active{ background:#fff; color:#000; border-color:#fff; font-weight:bold; }
+
+  .legend{
+    position:absolute; bottom:30px; right:20px;
+    background:rgba(0,0,0,0.8);
+    border:1px solid #333;
+    padding:15px; font-size:12px;
+  }
+  .legend-item{ display:flex; align-items:center; margin-bottom:8px; }
+  .color-box{ width:12px; height:12px; margin-right:10px; border:1px solid #555; }
+</style>
+</head>
+
+<body>
+<div id="map"></div>
+
+<div class="controls">
+  <h3>Project Filter</h3>
+  <button class="filter-btn active" data-filter="all">View All Zones</button>
+  <button class="filter-btn" data-filter="house">Residential Project</button>
+  <button class="filter-btn" data-filter="factory">Industrial Facility</button>
+  <button class="filter-btn" data-filter="mall">Commercial Complex</button>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><span class="color-box" style="background:#facc15"></span>Residential (R-1)</div>
+  <div class="legend-item"><span class="color-box" style="background:#a855f7"></span>Industrial (I-2)</div>
+  <div class="legend-item"><span class="color-box" style="background:#ef4444"></span>Commercial (C-2)</div>
+</div>
+
+<script>
+  mapboxgl.accessToken =
+  'pk.eyJ1IjoiZmxhcmVpdW0iLCJhIjoiY21qaXF4eDRyMTQ5ZjNlcTF2c3Ntd3NzOSJ9.jb1Fbw5JUyvBJ2czkccBXA';
+
+  // Base zones (demo). These are illustrative.
+  const zoningData = {
+    type: "FeatureCollection",
+    features: [
+      {
+        type: "Feature",
+        properties: {
+          name: "Cabancalan–Canduman Residential Area",
+          zone: "Residential (R-1)",
+          color: "#facc15",
+          allows_house: true,
+          allows_mall: false,
+          allows_factory: false,
+          notes: "Predominantly residential barangays with low-rise housing."
+        },
+        geometry: {
+          type: "Polygon",
+          coordinates: [[
+            [123.968, 10.356],
+            [123.981, 10.353],
+            [123.984, 10.343],
+            [123.975, 10.334],
+            [123.962, 10.338],
+            [123.961, 10.349],
+            [123.968, 10.356]
+          ]]
+        }
+      },
+      {
+        type: "Feature",
+        properties: {
+          name: "A.S. Fortuna – U.N. Avenue Corridor",
+          zone: "Commercial (C-2)",
+          color: "#ef4444",
+          allows_house: true,
+          allows_mall: true,
+          allows_factory: false,
+          notes: "Dense commercial corridor along major arterial roads."
+        },
+        geometry: {
+          type: "Polygon",
+          coordinates: [[
+            [123.944, 10.336],
+            [123.957, 10.336],
+            [123.960, 10.326],
+            [123.952, 10.317],
+            [123.939, 10.320],
+            [123.938, 10.330],
+            [123.944, 10.336]
+          ]]
+        }
+      },
+      {
+        type: "Feature",
+        properties: {
+          name: "Subangdaku Industrial Belt",
+          zone: "Industrial (I-2)",
+          color: "#a855f7",
+          allows_house: false,
+          allows_mall: true,
+          allows_factory: true,
+          notes: "Industrial/logistics belt near reclamation-adjacent roads (illustrative)."
+        },
+        geometry: {
+          type: "Polygon",
+          coordinates: [[
+            [123.931, 10.323],
+            [123.946, 10.326],
+            [123.951, 10.315],
+            [123.945, 10.303],
+            [123.930, 10.304],
+            [123.925, 10.314],
+            [123.931, 10.323]
+          ]]
+        }
+      }
+    ]
+  };
+
+  // We will store the latest source data here (after water check tags)
+  let currentData = JSON.parse(JSON.stringify(zoningData));
+
+  function computeBoundsFromGeoJSON(fc) {
+    const bounds = new mapboxgl.LngLatBounds();
+    fc.features.forEach(f => {
+      const coords = f.geometry.coordinates[0];
+      coords.forEach(([lng, lat]) => bounds.extend([lng, lat]));
+    });
+    return bounds;
+  }
+
+  /* ---------- Water check helpers ---------- */
+  function bboxOfPolygon(coords) {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    coords.forEach(([x, y]) => {
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x);
+      maxY = Math.max(maxY, y);
+    });
+    return { minX, minY, maxX, maxY };
+  }
+
+  // Ray casting
+  function pointInPolygon(point, vs) {
+    const x = point[0], y = point[1];
+    let inside = false;
+    for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+      const xi = vs[i][0], yi = vs[i][1];
+      const xj = vs[j][0], yj = vs[j][1];
+      const intersect = ((yi > y) !== (yj > y)) &&
+        (x < (xj - xi) * (y - yi) / ((yj - yi) || 1e-12) + xi);
+      if (intersect) inside = !inside;
+    }
+    return inside;
+  }
+
+  function samplePointsInPolygon(ring, step = 0.002) {
+    const { minX, minY, maxX, maxY } = bboxOfPolygon(ring);
+    const pts = [];
+    for (let x = minX; x <= maxX; x += step) {
+      for (let y = minY; y <= maxY; y += step) {
+        if (pointInPolygon([x, y], ring)) pts.push([x, y]);
+      }
+    }
+    return pts;
+  }
+
+  // Tries multiple likely "water" layer ids from the style
+  function getWaterLayerIds(map) {
+    const style = map.getStyle();
+    if (!style || !style.layers) return ['water', 'waterway'];
+
+    const ids = style.layers
+      .map(l => l.id)
+      .filter(id =>
+        id === 'water' ||
+        id === 'waterway' ||
+        id.includes('water') ||
+        id.includes('waterway')
+      );
+
+    // keep it small to avoid slow queries
+    const uniq = Array.from(new Set(ids));
+    return uniq.slice(0, 12);
+  }
+
+  function isPointOnWater(map, lngLat, waterLayerIds) {
+    const p = map.project(lngLat);
+    const features = map.queryRenderedFeatures(p, { layers: waterLayerIds });
+    return features && features.length > 0;
+  }
+
+  /* ---------- Map ---------- */
+  const map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/dark-v11',
+    center: [123.95, 10.33],
+    zoom: 12.8
+  });
+
+  map.on('load', () => {
+    map.addSource('zones', { type: 'geojson', data: currentData });
+
+    map.addLayer({
+      id: 'zones-fill',
+      type: 'fill',
+      source: 'zones',
+      paint: {
+        'fill-color': ['get', 'color'],
+        'fill-opacity': 0.55
+      }
+    });
+
+    map.addLayer({
+      id: 'zones-outline',
+      type: 'line',
+      source: 'zones',
+      paint: {
+        'line-color': '#ffffff',
+        'line-width': 1,
+        'line-opacity': 0.55
+      }
+    });
+
+    // Cursor UX
+    map.on('mouseenter', 'zones-fill', () => map.getCanvas().style.cursor = 'pointer');
+    map.on('mouseleave', 'zones-fill', () => map.getCanvas().style.cursor = '');
+
+    // Fit to zones on load
+    map.fitBounds(computeBoundsFromGeoJSON(currentData), { padding: 80, duration: 0 });
+
+    // ---- Water check pass (tags zones with waterRisk) ----
+    const waterLayerIds = getWaterLayerIds(map);
+
+    const updated = JSON.parse(JSON.stringify(currentData));
+    updated.features.forEach((f) => {
+      const ring = f.geometry.coordinates[0];
+
+      // Smaller step = more accurate but slower
+      const samples = samplePointsInPolygon(ring, 0.0018);
+      if (!samples.length) {
+        f.properties.waterRisk = "unknown";
+        f.properties.waterRatio = 0;
+        return;
+      }
+
+      let waterHits = 0;
+      for (const [lng, lat] of samples) {
+        if (isPointOnWater(map, { lng, lat }, waterLayerIds)) waterHits++;
+      }
+
+      const ratio = waterHits / samples.length;
+      f.properties.waterRatio = ratio;
+      f.properties.waterRisk = ratio > 0.15 ? "touches water" : "land-safe";
+    });
+
+    // Save + refresh source data
+    currentData = updated;
+    map.getSource('zones').setData(currentData);
+
+    // Visually dim zones that touch water
+    map.setPaintProperty('zones-fill', 'fill-opacity', [
+      'case',
+      ['==', ['get', 'waterRisk'], 'touches water'], 0.25,
+      0.60
+    ]);
+
+    map.setPaintProperty('zones-outline', 'line-opacity', [
+      'case',
+      ['==', ['get', 'waterRisk'], 'touches water'], 0.25,
+      0.55
+    ]);
+
+    // Click popup (works even after setData)
+    map.on('click', 'zones-fill', (e) => {
+      const f = e.features && e.features[0];
+      if (!f) return;
+
+      const p = f.properties || {};
+      const name = p.name ?? "Unnamed Zone";
+      const zone = p.zone ?? "Unknown Zone";
+      const notes = p.notes ?? "";
+      const waterRisk = p.waterRisk ?? "not checked";
+      const waterRatio = (p.waterRatio != null)
+        ? (Number(p.waterRatio) * 100).toFixed(1) + "%"
+        : "N/A";
+
+      new mapboxgl.Popup({ closeButton: true, closeOnClick: true })
+        .setLngLat(e.lngLat)
+        .setHTML(`
+          <div style="color:#111; font-family:system-ui,sans-serif; font-size:13px;">
+            <strong>${name}</strong><br>
+            Zone: ${zone}<br>
+            <small>${notes}</small><br><br>
+            <small>Water check: <b>${waterRisk}</b> (${waterRatio})</small>
+          </div>
+        `)
+        .addTo(map);
+    });
+
+    // Button wiring
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => setFilter(btn.dataset.filter, btn));
+    });
+  });
+
+  /* Filter logic: SHOW ONLY ALLOWED ZONES */
+  function setFilter(type, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    if (type === 'all') {
+      map.setFilter('zones-fill', null);
+      map.setFilter('zones-outline', null);
+      map.fitBounds(computeBoundsFromGeoJSON(currentData), { padding: 80, duration: 450 });
+      return;
+    }
+
+    const key = `allows_${type}`;
+    const filterExpr = ['==', ['get', key], true];
+
+    map.setFilter('zones-fill', filterExpr);
+    map.setFilter('zones-outline', filterExpr);
+
+    // Fit to filtered features using CURRENT data (includes waterRisk)
+    const filtered = {
+      type: "FeatureCollection",
+      features: currentData.features.filter(f => f.properties && f.properties[key] === true)
+    };
+
+    if (filtered.features.length) {
+      map.fitBounds(computeBoundsFromGeoJSON(filtered), { padding: 100, duration: 450 });
+    }
+  }
+</script>
+
+</body>
+</html>
