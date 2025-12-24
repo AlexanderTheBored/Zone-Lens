@@ -64,6 +64,8 @@
   'pk.eyJ1IjoiZmxhcmVpdW0iLCJhIjoiY21qaXF4eDRyMTQ5ZjNlcTF2c3Ntd3NzOSJ9.jb1Fbw5JUyvBJ2czkccBXA';
 
   // Base zones (demo). These are illustrative.
+  // Updated zone areas for better visibility and coverage - Jericho
+  // Adjusted to match actual barangay locations with proper borders - Jericho
   const zoningData = {
     type: "FeatureCollection",
     features: [
@@ -81,37 +83,40 @@
         geometry: {
           type: "Polygon",
           coordinates: [[
-            [123.968, 10.356],
-            [123.981, 10.353],
-            [123.984, 10.343],
-            [123.975, 10.334],
-            [123.962, 10.338],
-            [123.961, 10.349],
-            [123.968, 10.356]
+            [123.920, 10.360],
+            [123.930, 10.365],
+            [123.938, 10.362],
+            [123.945, 10.355],
+            [123.942, 10.345],
+            [123.935, 10.342],
+            [123.925, 10.345],
+            [123.918, 10.352],
+            [123.920, 10.360]
           ]]
         }
       },
       {
         type: "Feature",
         properties: {
-          name: "A.S. Fortuna – U.N. Avenue Corridor",
+          name: "A.S. Fortuna – Banilad Commercial Corridor",
           zone: "Commercial (C-2)",
           color: "#ef4444",
           allows_house: true,
           allows_mall: true,
           allows_factory: false,
-          notes: "Dense commercial corridor along major arterial roads."
+          notes: "Dense commercial corridor along A.S. Fortuna Street."
         },
         geometry: {
           type: "Polygon",
           coordinates: [[
-            [123.944, 10.336],
-            [123.957, 10.336],
-            [123.960, 10.326],
-            [123.952, 10.317],
-            [123.939, 10.320],
-            [123.938, 10.330],
-            [123.944, 10.336]
+            [123.915, 10.348],
+            [123.928, 10.350],
+            [123.935, 10.345],
+            [123.930, 10.335],
+            [123.922, 10.332],
+            [123.912, 10.335],
+            [123.910, 10.342],
+            [123.915, 10.348]
           ]]
         }
       },
@@ -124,18 +129,21 @@
           allows_house: false,
           allows_mall: true,
           allows_factory: true,
-          notes: "Industrial/logistics belt near reclamation-adjacent roads (illustrative)."
+          notes: "Industrial zone in central-western Mandaue near major roads."
         },
         geometry: {
           type: "Polygon",
           coordinates: [[
-            [123.931, 10.323],
-            [123.946, 10.326],
-            [123.951, 10.315],
-            [123.945, 10.303],
-            [123.930, 10.304],
-            [123.925, 10.314],
-            [123.931, 10.323]
+            [123.918, 10.330],
+            [123.933, 10.332],
+            [123.938, 10.325],
+            [123.936, 10.315],
+            [123.930, 10.310],
+            [123.920, 10.308],
+            [123.912, 10.312],
+            [123.910, 10.320],
+            [123.915, 10.328],
+            [123.918, 10.330]
           ]]
         }
       }
