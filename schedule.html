@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Weekly Calendar Blocks (Normal Calendar Style)</title>
+  <style>
+    :root{
+      --bg:#0b0c10;
+      --panel:#12141b;
+      --line:#242a3a;
+      --muted:#a7adbb;
+      --text:#e9ecf2;
+      --shadow: 0 12px 30px rgba(0,0,0,.35);
+      --radius: 14px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      background:
+        radial-gradient(1200px 500px at 20% -10%, rgba(82,120,255,.25), transparent 50%),
+        radial-gradient(900px 400px at 85% 0%, rgba(46,229,157,.18), transparent 60%),
+        var(--bg);
+      padding: 22px 14px;
+    }
+
+    .wrap{
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      gap: 12px;
+    }
+
+    header{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    h1{margin:0;font-size:18px;letter-spacing:.2px}
+    .sub{margin:6px 0 0;color:var(--muted);font-size:13px;line-height:1.35}
+
+    .controls{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .search{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      min-width: 260px;
+    }
+    .search .hint{color:var(--muted);font-size:12px;white-space:nowrap}
+    .search input{
+      width:100%;
+      border:0;
+      outline:none;
+      background:transparent;
+      color:var(--text);
+      font-size:13px;
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    /* ===== Calendar layout ===== */
+    .calendar{
+      display:grid;
+      grid-template-columns: 72px 1fr;
+      min-height: 720px;
+    }
+
+    .timeCol{
+      border-right: 1px solid var(--line);
+      background: rgba(255,255,255,.02);
+    }
+
+    .daysWrap{
+      display:grid;
+      grid-template-rows: 44px 1fr;
+      min-width: 0;
+    }
+
+    .daysHeader{
+      display:grid;
+      grid-template-columns: repeat(6, 1fr);
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,.02);
+    }
+    .dayHead{
+      padding: 12px 10px;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .35px;
+      border-right: 1px solid rgba(36,42,58,.65);
+    }
+    .dayHead:last-child{border-right:0}
+
+    .gridArea{
+      position: relative;
+      display:grid;
+      grid-template-columns: repeat(6, 1fr);
+      min-height: 0;
+      background:
+        linear-gradient(to bottom, rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size: 100% 30px; /* row lines (depends on pxPerMin below) */
+    }
+
+    .dayCol{
+      position: relative;
+      border-right: 1px solid rgba(36,42,58,.65);
+      min-width: 0;
+    }
+    .dayCol:last-child{border-right:0}
+
+    /* Hour labels */
+    .timeHeader{
+      height: 44px;
+      border-bottom: 1px solid var(--line);
+    }
+    .timeSlots{
+      position: relative;
+    }
+    .timeLabel{
+      height: 120px; /* 60min * 2px per min */
+      border-bottom: 1px solid rgba(36,42,58,.65);
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      padding-top: 8px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    /* Event blocks */
+    .event{
+      position:absolute;
+      left: 8px;
+      right: 8px;
+      border-radius: 12px;
+      padding: 8px 10px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(122,162,255,.18);
+      overflow:hidden;
+      backdrop-filter: blur(6px);
+    }
+    .event .title{
+      font-weight: 800;
+      font-size: 12px;
+      line-height: 1.1;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .event .meta{
+      font-family: var(--mono);
+      font-size: 11px;
+      line-height: 1.2;
+      opacity: .92;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .legend{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      padding: 12px 14px;
+      border-top: 1px solid var(--line);
+      background: rgba(255,255,255,.02);
+    }
+    .chip{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.03);
+      cursor:pointer;
+      user-select:none;
+      font-size: 12px;
+    }
+    .chip.off{opacity:.45; filter: grayscale(.25);}
+    .swatch{
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      background: #7aa2ff;
+      box-shadow: 0 0 0 3px rgba(122,162,255,.12);
+    }
+
+    @media (max-width: 860px){
+      .calendar{grid-template-columns: 64px 1fr;}
+      .daysHeader, .gridArea{grid-template-columns: repeat(3, 1fr);}
+      .hide-mobile{display:none !important;}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Weekly Calendar</h1>
+        <div class="sub"></div>
+      </div>
+      <div class="controls">
+        <div class="search" title="Search by course, room, day, or time">
+          <span class="hint">Search</span>
+          <input id="q" placeholder="ex: CIS 1202, Sat, 01:30, LB48" autocomplete="off" />
+        </div>
+      </div>
+    </header>
+
+    <section class="card">
+      <div class="calendar">
+        <div class="timeCol">
+          <div class="timeHeader"></div>
+          <div class="timeSlots" id="timeSlots"></div>
+        </div>
+
+        <div class="daysWrap">
+          <div class="daysHeader" id="daysHeader"></div>
+          <div class="gridArea" id="gridArea"></div>
+        </div>
+      </div>
+
+      <div class="legend" id="legend"></div>
+    </section>
+  </div>
+
+  <script>
+    // ====== YOUR DATA ======
+    const courses = [
+      { title: "CIS 1201", units: 3.0, meetings: [{ days:["M","W"], start:"15:00", end:"17:30", room:"LB468TC" }]},
+      { title: "CIS 1204", units: 3.0, meetings: [{ days:["T","Th"], start:"13:30", end:"15:00", room:"LB484TC" }]},
+      { title: "IT 3106", units: 3.0, meetings: [{ days:["M","W"], start:"13:30", end:"15:00", room:"LB486TC" }]},
+      { title: "CIS 2106N", units: 1.0, meetings: [{ days:["Sat"], start:"07:30", end:"10:30", room:"LB445TC" }]},
+      { title: "CIS 1205", units: 3.0, meetings: [{ days:["M","W"], start:"10:00", end:"12:30", room:"LB469TC" }]},
+      { title: "CIS 1202", units: 3.0, meetings: [{ days:["T","Th"], start:"15:00", end:"17:30", room:"LB447TC" }]},
+      { title: "GE-FEL TFL", units: 3.0, meetings: [{ days:["M","W"], start:"07:30", end:"09:00", room:"LB485TC" }]},
+      { title: "EDM 2", units: 3.0, meetings: [{ days:["T","Th"], start:"09:00", end:"10:30", room:"LB102TC" }]},
+      { title: "NSTP 2", units: 3.0, meetings: [{ days:["Sat"], start:"12:00", end:"15:00", room:"LB486TC" }]},
+      { title: "TPE 1202", units: 2.0, meetings: [{ days:["T","Th"], start:"08:00", end:"09:00", room:"JBB102TC" }]}
+    ];
+
+    // ====== CALENDAR SETTINGS ======
+    // Covers your earliest to latest class in the screenshot:
+    const dayOrder = ["M","T","W","Th","F","Sat"]; // (no Sunday)
+    const dayLabel = { M:"Mon", T:"Tue", W:"Wed", Th:"Thu", F:"Fri", Sat:"Sat" };
+
+    // Timeline range:
+    const startTime = "07:30";
+    const endTime   = "17:30";
+
+    // Pixels per minute (2px/min = 120px per hour)
+    const pxPerMin = 2;
+
+    // ====== STATE ======
+    const hidden = new Set();
+    let query = "";
+
+    // ====== HELPERS ======
+    function toMinutes(hhmm){
+      const [h,m] = hhmm.split(":").map(Number);
+      return h*60 + m;
+    }
+    function fmt12h(hhmm){
+      let [h,m]=hhmm.split(":").map(Number);
+      const ap = h>=12 ? "PM" : "AM";
+      h = h%12; if (h===0) h=12;
+      return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")} ${ap}`;
+    }
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, c => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+      }[c]));
+    }
+    function meetingToText(m){
+      return `${m.days.join(" ")} ${fmt12h(m.start)} - ${fmt12h(m.end)} ${m.room}`;
+    }
+    function matchesQuery(course, q){
+      if(!q) return true;
+      const hay = [
+        course.title,
+        String(course.units),
+        ...course.meetings.flatMap(m => [
+          m.days.join(" "),
+          meetingToText(m),
+          m.room,
+          m.start, m.end,
+          fmt12h(m.start), fmt12h(m.end)
+        ])
+      ].join(" ").toLowerCase();
+      return hay.includes(q.toLowerCase());
+    }
+    function colorFor(title){
+      let hash = 0;
+      for (let i=0;i<title.length;i++) hash = (hash*31 + title.charCodeAt(i)) >>> 0;
+      const hue = hash % 360;
+      return {
+        bg: `hsla(${hue}, 80%, 60%, 0.18)`,
+        border: `hsla(${hue}, 80%, 70%, 0.28)`,
+        solid: `hsl(${hue}, 85%, 70%)`,
+        glow: `hsla(${hue}, 85%, 70%, 0.18)`
+      };
+    }
+
+    // ====== RENDER ======
+    function render(){
+      renderHeaders();
+      renderTimeAxis();
+      renderGridColumns();
+      renderEvents();
+      renderLegend();
+    }
+
+    function renderHeaders(){
+      const daysHeader = document.getElementById("daysHeader");
+      daysHeader.innerHTML = "";
+      dayOrder.forEach(d => {
+        const div = document.createElement("div");
+        div.className = "dayHead" + (d==="F" ? " hide-mobile" : "");
+        div.textContent = dayLabel[d];
+        daysHeader.appendChild(div);
+      });
+
+      // When mobile collapses to 3 columns, hide W/Th/F? We'll hide W/Th/F via CSS class on columns too.
+      // We'll mark F as hide-mobile; and also mark W/Th as hide-mobile if you want more compact.
+      // For now, only F is hidden.
+    }
+
+    function renderTimeAxis(){
+      const start = toMinutes(startTime);
+      const end = toMinutes(endTime);
+      const totalMins = end - start;
+      const hours = Math.ceil(totalMins / 60);
+
+      const slots = document.getElementById("timeSlots");
+      slots.innerHTML = "";
+      slots.style.height = (totalMins * pxPerMin) + "px";
+
+      // Create hour labels aligned with the grid background lines
+      for(let i=0;i<=hours;i++){
+        const t = start + i*60;
+        if (t > end) break;
+        const hh = Math.floor(t/60), mm = t%60;
+        const label = fmt12h(`${String(hh).padStart(2,"0")}:${String(mm).padStart(2,"0")}`);
+        const div = document.createElement("div");
+        div.className = "timeLabel";
+        div.style.height = (60 * pxPerMin) + "px";
+        div.textContent = label;
+        slots.appendChild(div);
+      }
+
+      // Match the horizontal line spacing to 30 minutes
+      const gridArea = document.getElementById("gridArea");
+      gridArea.style.backgroundSize = `100% ${30 * pxPerMin}px`;
+      gridArea.style.height = (totalMins * pxPerMin) + "px";
+    }
+
+    function renderGridColumns(){
+      const gridArea = document.getElementById("gridArea");
+      gridArea.innerHTML = "";
+      dayOrder.forEach(d => {
+        const col = document.createElement("div");
+        col.className = "dayCol" + (d==="F" ? " hide-mobile" : "");
+        col.dataset.day = d;
+        gridArea.appendChild(col);
+      });
+    }
+
+    function renderEvents(){
+      const start = toMinutes(startTime);
+      const end = toMinutes(endTime);
+
+      const filteredCourses = courses
+        .filter(c => matchesQuery(c, query))
+        .filter(c => !hidden.has(c.title));
+
+      // For each day column, gather events then place (basic overlap handling)
+      dayOrder.forEach(day => {
+        const col = document.querySelector(`.dayCol[data-day="${day}"]`);
+        if (!col) return;
+        col.innerHTML = "";
+
+        const events = [];
+        for (const c of filteredCourses){
+          for (const m of c.meetings){
+            if (!m.days.includes(day)) continue;
+            const s = toMinutes(m.start);
+            const e = toMinutes(m.end);
+            // clamp to timeline
+            const cs = Math.max(s, start);
+            const ce = Math.min(e, end);
+            if (ce <= start || cs >= end) continue;
+            events.push({ course:c, meet:m, startMin:cs, endMin:ce });
+          }
+        }
+
+        // Sort by start time
+        events.sort((a,b) => a.startMin - b.startMin || a.endMin - b.endMin);
+
+        // Simple overlap layout: assign columns within each overlap group
+        const placed = layoutOverlaps(events);
+
+        for (const ev of placed){
+          const color = colorFor(ev.course.title);
+
+          const top = (ev.startMin - start) * pxPerMin;
+          const height = Math.max(18, (ev.endMin - ev.startMin) * pxPerMin);
+
+          const div = document.createElement("div");
+          div.className = "event";
+          div.style.top = `${top}px`;
+          div.style.height = `${height}px`;
+          div.style.background = color.bg;
+          div.style.borderColor = color.border;
+
+          // overlap widths
+          const pad = 8;
+          const totalCols = ev.groupCols;
+          const gap = 6;
+          const colWidthPct = 100 / totalCols;
+          const leftPct = ev.colIndex * colWidthPct;
+          div.style.left = `calc(${leftPct}% + ${pad + gap/2}px)`;
+          div.style.right = `calc(${(totalCols-1-ev.colIndex)*colWidthPct}% + ${pad + gap/2}px)`;
+
+          div.innerHTML = `
+            <div class="title">${escapeHtml(ev.course.title)}</div>
+            <div class="meta">${escapeHtml(fmt12h(ev.meet.start))} - ${escapeHtml(fmt12h(ev.meet.end))}</div>
+            <div class="meta">${escapeHtml(ev.meet.room)}</div>
+          `;
+          col.appendChild(div);
+        }
+      });
+    }
+
+    // Assign overlapping events into subcolumns within each overlap cluster.
+    function layoutOverlaps(events){
+      const out = [];
+      let active = []; // {endMin, colIndex, ...}
+      let cluster = []; // current overlap cluster
+      let clusterEnd = -Infinity;
+
+      function flushCluster(){
+        if (!cluster.length) return;
+
+        // Greedy column assignment inside cluster
+        const colsEnd = []; // end time per column
+        for (const ev of cluster){
+          let k = 0;
+          while (k < colsEnd.length && colsEnd[k] > ev.startMin) k++;
+          if (k === colsEnd.length) colsEnd.push(ev.endMin);
+          else colsEnd[k] = ev.endMin;
+          ev.colIndex = k;
+          ev.groupCols = colsEnd.length;
+        }
+
+        // Fix groupCols to the max cols used in the cluster
+        const maxCols = Math.max(...cluster.map(e => e.groupCols));
+        cluster.forEach(e => e.groupCols = maxCols);
+
+        out.push(...cluster);
+        cluster = [];
+        clusterEnd = -Infinity;
+      }
+
+      for (const ev of events){
+        if (cluster.length === 0){
+          cluster.push(ev);
+          clusterEnd = ev.endMin;
+          continue;
+        }
+
+        // if this event starts after cluster ends, flush and start a new cluster
+        if (ev.startMin >= clusterEnd){
+          flushCluster();
+          cluster.push(ev);
+          clusterEnd = ev.endMin;
+        } else {
+          cluster.push(ev);
+          clusterEnd = Math.max(clusterEnd, ev.endMin);
+        }
+      }
+      flushCluster();
+      return out;
+    }
+
+    function renderLegend(){
+      const legend = document.getElementById("legend");
+      legend.innerHTML = "";
+
+      const visiblePool = courses.filter(c => matchesQuery(c, query));
+      for (const c of visiblePool){
+        const color = colorFor(c.title);
+        const chip = document.createElement("div");
+        chip.className = "chip" + (hidden.has(c.title) ? " off" : "");
+        chip.title = hidden.has(c.title) ? "Click to show" : "Click to hide";
+
+        const sw = document.createElement("span");
+        sw.className = "swatch";
+        sw.style.background = color.solid;
+        sw.style.boxShadow = `0 0 0 3px ${color.glow}`;
+
+        const label = document.createElement("span");
+        label.textContent = c.title;
+
+        chip.appendChild(sw);
+        chip.appendChild(label);
+
+        chip.addEventListener("click", () => {
+          if (hidden.has(c.title)) hidden.delete(c.title);
+          else hidden.add(c.title);
+          renderEvents();
+          renderLegend();
+        });
+
+        legend.appendChild(chip);
+      }
+    }
+
+    // ====== SEARCH ======
+    document.getElementById("q").addEventListener("input", (e) => {
+      query = e.target.value.trim();
+      render();
+    });
+
+    window.addEventListener("resize", () => {
+      // Re-render to keep height/lines consistent
+      render();
+    });
+
+    // Initial render
+    render();
+  </script>
+</body>
+</html>
