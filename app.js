@@ -171,26 +171,6 @@ mapboxgl.accessToken = 'pk.eyJ1IjoiZmxhcmVpdW0iLCJhIjoiY21qaXF4eDRyMTQ5ZjNlcTF2c
     ]
   };
 
-  // - Jericho: Corrected Butuanon River path based on actual geography
-  const butuanonRiver = {
-    type: "Feature",
-    properties: { name: "Butuanon River - 23km watershed from mountains to sea" },
-    geometry: {
-      type: "LineString",
-      coordinates: [
-        [123.900, 10.380], [123.905, 10.377], [123.910, 10.374],
-        [123.915, 10.371], [123.920, 10.368], [123.924, 10.365],
-        [123.928, 10.362], [123.931, 10.359], [123.934, 10.356],
-        [123.937, 10.353], [123.939, 10.350], [123.941, 10.347],
-        [123.943, 10.344], [123.944, 10.341], [123.945, 10.338],
-        [123.946, 10.335], [123.946, 10.332], [123.946, 10.329],
-        [123.945, 10.326], [123.944, 10.323], [123.943, 10.320],
-        [123.942, 10.317], [123.941, 10.314], [123.940, 10.311],
-        [123.939, 10.308], [123.938, 10.305], [123.937, 10.302],
-        [123.936, 10.299], [123.935, 10.296]
-      ]
-    }
-  };
 
   // - Jericho: Enhanced flood risk zones with more detailed documentation
   const floodRiskZones = {
@@ -429,13 +409,7 @@ mapboxgl.accessToken = 'pk.eyJ1IjoiZmxhcmVpdW0iLCJhIjoiY21qaXF4eDRyMTQ5ZjNlcTF2c
       type: 'geojson',
       data: floodRiskZones
     });
-
-    // - Jericho: Add river source
-    map.addSource('butuanon-river', {
-      type: 'geojson',
-      data: butuanonRiver
-    });
-
+    
     // - Jericho: Add zoning source
     map.addSource('zones', { 
       type: 'geojson', 
@@ -496,38 +470,6 @@ mapboxgl.accessToken = 'pk.eyJ1IjoiZmxhcmVpdW0iLCJhIjoiY21qaXF4eDRyMTQ5ZjNlcTF2c
         ],
         'line-width': 1.5,
         'line-opacity': 0.7
-      }
-    });
-
-    // 3. Water bodies and rivers
-    map.addLayer({
-      id: 'river-glow',
-      type: 'line',
-      source: 'butuanon-river',
-      layout: { visibility: 'none' },
-      paint: {
-        'line-color': '#3b82f6',
-        'line-width': [
-          'interpolate', ['linear'], ['zoom'],
-          11, 8, 13, 20, 15, 40, 17, 60
-        ],
-        'line-opacity': 0.25,
-        'line-blur': 8
-      }
-    });
-
-    map.addLayer({
-      id: 'river-line',
-      type: 'line',
-      source: 'butuanon-river',
-      layout: { visibility: 'none' },
-      paint: {
-        'line-color': '#1e40af',
-        'line-width': [
-          'interpolate', ['linear'], ['zoom'],
-          11, 3, 13, 8, 15, 16, 17, 32
-        ],
-        'line-opacity': 0.85
       }
     });
 
