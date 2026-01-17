@@ -1,0 +1,8 @@
+Work to be done: 
+
+UI clean up (improve, make the ai button stop clipping over the mapbox logo, center the search bar, and just revamp site.)
+*Add a no zones filter.
+Add more zoning districts (based on png)
+Improve colors for flood risk zones (differentiate shades)
+Make a logo and favicon.
+Debugging (fix the clipping of elevation map and buildings)
