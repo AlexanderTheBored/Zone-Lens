@@ -34,7 +34,17 @@
   </div>
 
   <div class="controls">
-    <h3>Project Filter</h3>
+    <h3>
+      Project Filter
+      <span class="tooltip-icon"
+        data-tooltip="Filter zones by project type to see which areas allow specific developments">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+      </span>
+    </h3>
     <button class="filter-btn active" data-filter="all">
       <span>View All Zones</span>
     </button>
@@ -50,13 +60,33 @@
   </div>
 
   <div class="legend">
-    <h4>Zoning Districts</h4>
+    <h4>
+      Zoning Districts
+      <span class="tooltip-icon"
+        data-tooltip="Color-coded zones showing permitted land use types and development regulations">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+      </span>
+    </h4>
     <div class="legend-item"><span class="color-box" style="background:#facc15"></span>Residential (R-1)</div>
     <div class="legend-item"><span class="color-box" style="background:#a855f7"></span>Industrial (I-2)</div>
     <div class="legend-item"><span class="color-box" style="background:#3b82f6"></span>Commercial (C-2)</div>
     <div class="legend-item"><span class="color-box" style="background:#10b981"></span>Mixed-Use (MU-1)</div>
 
-    <h4 style="margin-top:18px;">Flood Risk Zones</h4>
+    <h4 style="margin-top:18px;">
+      Flood Risk Zones
+      <span class="tooltip-icon"
+        data-tooltip="Historical flood data showing water depth levels during typhoons and heavy rainfall">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+      </span>
+    </h4>
     <div class="legend-item"><span class="color-box" style="background:#b91c1c"></span>Critical (Roof-level)</div>
     <div class="legend-item"><span class="color-box" style="background:#dc2626"></span>High Risk (Chest-deep)</div>
     <div class="legend-item"><span class="color-box" style="background:#f59e0b"></span>Moderate (Knee-deep)</div>
@@ -64,7 +94,17 @@
   </div>
 
   <div class="elevation-controls">
-    <h3>Map Layers</h3>
+    <h3>
+      Map Layers
+      <span class="tooltip-icon"
+        data-tooltip="Toggle visualization layers to analyze terrain elevation, buildings, and water features">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+      </span>
+    </h3>
     <button class="toggle-btn" id="terrainBtn">3D Terrain Map</button>
     <button class="toggle-btn" id="buildingsBtn">3D Buildings</button>
     <button class="toggle-btn" id="floodBtn">Flood Risk Zones</button>
