@@ -1,4 +1,4 @@
-# ZoneGuide – Mandaue Zoning Laws And Flood Risk Analysis
+# Zone|Lens – Mandaue Zoning Laws And Flood Risk Analysis
 
 ZoneGuide is a Mapbox GL-based web application for visualizing zoning districts and flood risk zones in Mandaue City. It provides interactive layers, search, a compass widget, and a BelaBot assistant for exploring the map and understanding the data. This project is our entry to the Sinulog Hackathon: Hackestate 3.0 Grand Finals.
 
