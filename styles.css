@@ -24,6 +24,7 @@ body {
     position: absolute;
     top: 20px;
     left: 20px;
+    overflow: visible;
     background: rgba(15, 15, 15, 0.88);
     backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -83,13 +84,10 @@ body {
     transform: scale(1.15);
 }
 
-/* Tooltip popup - default positioning */
+/* FIX #1: Tooltip positioning - Use fixed positioning to escape parent containers */
 .tooltip-icon::after {
     content: attr(data-tooltip);
-    position: absolute;
-    bottom: 50%;
-    left: calc(100% + 12px);
-    transform: translateY(50%);
+    position: fixed;
     background: linear-gradient(135deg, #f472b6 0%, #ec4899 100%);
     color: #1a1a1a;
     padding: 10px 14px;
@@ -99,14 +97,26 @@ body {
     line-height: 1.5;
     white-space: normal;
     width: 200px;
+    max-width: 200px;
     text-align: left;
     opacity: 0;
     pointer-events: none;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 1000;
+    z-index: 10000;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
     text-transform: none;
     letter-spacing: 0.3px;
+}
+
+.tooltip-icon::before {
+    content: '';
+    position: fixed;
+    border: 6px solid transparent;
+    border-right-color: #f472b6;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 10001;
 }
 
 /* Tooltip arrow - default */
@@ -211,6 +221,7 @@ body {
 }
 
 .filters-container {
+    overflow: visible;
     transition: all 0.3s ease;
 }
 
@@ -739,7 +750,7 @@ body {
     left: 20px;
     width: 380px;
     height: auto;
-    max-height: calc(100vh - 100px);
+    max-height: calc(100vh - 160px);
     background: rgba(15, 15, 15, 0.95);
     backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.1);
