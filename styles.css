@@ -1,5 +1,11 @@
-/* styles.css */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+
+:root {
+    /* Added dynamic scaling variables */
+    --panel-width: clamp(260px, 20vw, 320px); /* Min 260px, Target 20% of screen, Max 320px */
+    --search-width: min(520px, 90vw);         /* Cap at 520px, but shrink to 90% width on small screens */
+    --spacing-base: clamp(10px, 1.5vh, 20px); /* Spacing scales with screen height */
+}
 
 body {
     margin: 0;
@@ -7,9 +13,11 @@ body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     background: #0a0a0a;
     color: #fff;
-    font-size: 14px;
+    /* Added fluid base font size: 14px min, 16px max depending on screen width */
+    font-size: clamp(0.875rem, 1vw, 1rem);
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
+    overflow: hidden; /* Prevent scrollbars on the body itself */
 }
 
 #map {
@@ -19,25 +27,35 @@ body {
     width: 100%;
 }
 
-/* Enhanced controls panel */
 .controls {
     position: absolute;
-    top: 20px;
-    left: 20px;
+    top: var(--spacing-base);
+    left: var(--spacing-base);
     overflow: visible;
     background: rgba(15, 15, 15, 0.88);
     backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.08);
     padding: 16px;
-    width: 280px;
+    width: var(--panel-width); 
+    max-height: calc(100vh - 40px); /* Prevent overflow off-screen */
+    overflow-y: auto; /* Allow internal scrolling if screen is short */
     z-index: 10;
     border-radius: 12px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    transition: width 0.3s ease;
+}
+
+.controls::-webkit-scrollbar {
+    width: 4px;
+}
+.controls::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.2);
+    border-radius: 2px;
 }
 
 .controls h3 {
     margin: 0 0 8px 0;
-    font-size: 11px;
+    font-size: 0.75rem; /* ~12px */
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -52,13 +70,12 @@ body {
 
 .control-help-text {
     margin: 0 0 12px 0;
-    font-size: 10px;
+    font-size: 0.7rem;
     color: #64748b;
     font-weight: 400;
     line-height: 1.4;
 }
 
-/* Tooltip Icon Styles */
 .tooltip-icon {
     display: inline-flex;
     align-items: center;
@@ -84,15 +101,14 @@ body {
     transform: scale(1.15);
 }
 
-/* FIX #1: Tooltip positioning - Use fixed positioning to escape parent containers */
 .tooltip-icon::after {
     content: attr(data-tooltip);
-    position: fixed;
+    position: fixed; /* Fixed prevents clipping inside scrollable panels */
     background: linear-gradient(135deg, #f472b6 0%, #ec4899 100%);
     color: #1a1a1a;
     padding: 10px 14px;
     border-radius: 8px;
-    font-size: 11px;
+    font-size: 0.75rem;
     font-weight: 600;
     line-height: 1.5;
     white-space: normal;
@@ -110,19 +126,7 @@ body {
 
 .tooltip-icon::before {
     content: '';
-    position: fixed;
-    border: 6px solid transparent;
-    border-right-color: #f472b6;
-    opacity: 0;
-    pointer-events: none;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 10001;
-}
-
-/* Tooltip arrow - default */
-.tooltip-icon::before {
-    content: '';
-    position: absolute;
+    position: absolute; /* Kept absolute relative to icon */
     bottom: 50%;
     left: calc(100% + 6px);
     transform: translateY(50%);
@@ -131,7 +135,7 @@ body {
     opacity: 0;
     pointer-events: none;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 1001;
+    z-index: 10001;
 }
 
 .tooltip-icon:hover::after,
@@ -139,44 +143,13 @@ body {
     opacity: 1;
 }
 
-/* Tooltip positioning for right-side panel - show on left */
-.elevation-controls .tooltip-icon::after {
-    left: auto;
-    right: calc(100% + 12px);
-}
-
-.elevation-controls .tooltip-icon::before {
-    left: auto;
-    right: calc(100% + 6px);
-    border-right-color: transparent;
-    border-left-color: #f472b6;
-}
-
-/* Tooltip positioning for legend (bottom right) - show above to prevent clipping */
-.legend .tooltip-icon::after {
-    bottom: calc(100% + 12px);
-    top: auto;
-    left: auto;
-    right: 0;
-    transform: translateX(0);
-}
-
-.legend .tooltip-icon::before {
-    bottom: calc(100% + 6px);
-    top: auto;
-    left: auto;
-    right: 10px;
-    transform: translateX(0);
-    border-right-color: transparent;
-    border-top-color: #f472b6;
-}
-
-/* Tooltip positioning for right sidebar panels - show on left to avoid clipping */
+.elevation-controls .tooltip-icon::after,
 .right-sidebar .tooltip-icon::after {
     left: auto;
     right: calc(100% + 12px);
 }
 
+.elevation-controls .tooltip-icon::before,
 .right-sidebar .tooltip-icon::before {
     left: auto;
     right: calc(100% + 6px);
@@ -184,15 +157,11 @@ body {
     border-left-color: #f472b6;
 }
 
-
 /* Make headings position relative to contain tooltips */
-.controls h3,
-.legend h4,
-.elevation-controls h3 {
+.controls h3, .legend h4, .elevation-controls h3 {
     position: relative;
 }
 
-/* Filter visibility toggle */
 .filter-visibility-toggle {
     display: flex;
     align-items: center;
@@ -202,7 +171,7 @@ body {
     background: rgba(30, 30, 30, 0.4);
     border: 1px solid rgba(244, 114, 182, 0.2);
     border-radius: 8px;
-    font-size: 11px;
+    font-size: 0.75rem;
     color: #94a3b8;
     cursor: pointer;
     transition: all 0.2s;
@@ -225,7 +194,6 @@ body {
     transition: all 0.3s ease;
 }
 
-/* Filter buttons */
 .filter-btn {
     display: flex;
     align-items: center;
@@ -237,7 +205,7 @@ body {
     border: 1.5px solid rgba(255, 255, 255, 0.15);
     color: #cbd5e1;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 0.85rem;
     font-weight: 500;
     text-align: left;
     text-transform: uppercase;
@@ -259,26 +227,13 @@ body {
     transition: left 0.5s;
 }
 
-.filter-btn:hover::before {
-    left: 100%;
-}
-
-.filter-btn:focus {
-    outline: 2px solid #ec4899;
-    outline-offset: 2px;
-}
-
-.filter-btn:focus:not(:focus-visible) {
-    outline: none;
-}
-
+.filter-btn:hover::before { left: 100%; }
 .filter-btn:hover {
     border-color: rgba(244, 114, 182, 0.4);
     color: #fff;
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(236, 72, 153, 0.15);
 }
-
 .filter-btn.active {
     background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
     color: #fff;
@@ -287,15 +242,12 @@ body {
     box-shadow: 0 2px 12px rgba(236, 72, 153, 0.25);
 }
 
-/* ============================================
-   RIGHT SIDEBAR CONTAINER - Core Layout
-   ============================================ */
 .right-sidebar {
     position: fixed;
-    top: 20px;
-    right: 20px;
-    bottom: 20px;
-    width: 280px;
+    top: var(--spacing-base);
+    right: var(--spacing-base);
+    bottom: var(--spacing-base);
+    width: var(--panel-width); /* Dynamic width */
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
@@ -305,26 +257,11 @@ body {
     overflow-x: hidden;
 }
 
-/* Scrollbar for right sidebar */
-.right-sidebar::-webkit-scrollbar {
-    width: 6px;
-}
+.right-sidebar::-webkit-scrollbar { width: 6px; }
+.right-sidebar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); border-radius: 3px; }
+.right-sidebar::-webkit-scrollbar-thumb { background: rgba(244, 114, 182, 0.3); border-radius: 3px; }
+.right-sidebar::-webkit-scrollbar-thumb:hover { background: rgba(244, 114, 182, 0.5); }
 
-.right-sidebar::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.02);
-    border-radius: 3px;
-}
-
-.right-sidebar::-webkit-scrollbar-thumb {
-    background: rgba(244, 114, 182, 0.3);
-    border-radius: 3px;
-}
-
-.right-sidebar::-webkit-scrollbar-thumb:hover {
-    background: rgba(244, 114, 182, 0.5);
-}
-
-/* Base panel styling */
 .panel {
     background: rgba(15, 15, 15, 0.88);
     backdrop-filter: blur(8px);
@@ -337,26 +274,9 @@ body {
     flex-shrink: 0;
 }
 
-/* Map Layers panel - compact, no internal scrolling */
-.panel-map-layers {
-    overflow: visible;
-}
-
-/* Data Sources panel - compact */
-.panel-data-sources {
-    overflow: visible;
-}
-
-/* Legend panel - no internal scrolling, expands as needed */
-.panel-legend {
-    overflow: visible;
-}
-
-/* Panel headers */
-.panel h3,
-.panel h4 {
+.panel h3, .panel h4 {
     margin: 0 0 8px 0;
-    font-size: 9px;
+    font-size: 0.7rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.8px;
@@ -369,41 +289,18 @@ body {
     position: relative;
 }
 
-.panel h4 {
-    font-size: 9px;
-    margin-top: 0;
-}
+.panel h4 { font-size: 0.7rem; margin-top: 0; }
+.panel h4:not(:first-child) { margin-top: 10px; }
 
-.panel h4:not(:first-child) {
-    margin-top: 10px;
-}
-
-/* Data source items */
 .data-source-item {
     padding: 6px 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-    font-size: 9px;
+    font-size: 0.7rem;
     color: #cbd5e1;
 }
-
-.data-source-item:last-child {
-    border-bottom: none;
-}
-
-.data-source-item strong {
-    color: #f1f5f9;
-    font-weight: 600;
-    display: block;
-    margin-bottom: 3px;
-    font-size: 9px;
-}
-
-.data-source-item small {
-    color: #94a3b8;
-    font-size: 8px;
-    line-height: 1.3;
-}
-
+.data-source-item:last-child { border-bottom: none; }
+.data-source-item strong { color: #f1f5f9; font-weight: 600; display: block; margin-bottom: 3px; font-size: 0.7rem; }
+.data-source-item small { color: #94a3b8; font-size: 0.65rem; line-height: 1.3; }
 .data-source-item.highlight {
     background: rgba(244, 114, 182, 0.08);
     padding: 6px 8px;
@@ -412,23 +309,17 @@ body {
     border: 1px solid rgba(244, 114, 182, 0.15);
 }
 
-/* Legend items */
 .legend-item {
     display: flex;
     align-items: center;
     margin-bottom: 4px;
     transition: all 0.2s;
     padding: 2px 0;
-    font-size: 10px;
+    font-size: 0.75rem;
     color: #cbd5e1;
     font-weight: 500;
 }
-
-.legend-item:hover {
-    transform: translateX(2px);
-    color: #f1f5f9;
-}
-
+.legend-item:hover { transform: translateX(2px); color: #f1f5f9; }
 .color-box {
     width: 14px;
     height: 14px;
@@ -439,21 +330,10 @@ body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-/* Layer Control Panel - Grouped Sections */
-.layer-section {
-    margin-bottom: 10px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.layer-section:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
-    padding-bottom: 0;
-}
-
+.layer-section { margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
+.layer-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
 .layer-section-label {
-    font-size: 8px;
+    font-size: 0.65rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.6px;
@@ -462,15 +342,7 @@ body {
     display: block;
 }
 
-/* Compact Layer Toggle Rows */
-.layer-toggle-row {
-    margin-bottom: 4px;
-}
-
-.layer-toggle-row:last-child {
-    margin-bottom: 0;
-}
-
+.layer-toggle-row { margin-bottom: 4px; }
 .layer-toggle {
     display: flex;
     align-items: center;
@@ -481,61 +353,32 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.08);
     color: #94a3b8;
     cursor: pointer;
-    font-size: 10px;
+    font-size: 0.75rem;
     font-weight: 500;
     text-align: left;
     border-radius: 5px;
     transition: all 0.2s ease;
 }
-
-.layer-toggle:hover {
-    background: rgba(30, 30, 30, 0.8);
-    border-color: rgba(255, 255, 255, 0.12);
-    color: #cbd5e1;
-}
-
-.layer-toggle svg {
-    width: 12px;
-    height: 12px;
-    flex-shrink: 0;
-    opacity: 0.6;
-    transition: opacity 0.2s;
-}
-
-.layer-toggle span {
-    flex: 1;
-}
-
+.layer-toggle:hover { background: rgba(30, 30, 30, 0.8); border-color: rgba(255, 255, 255, 0.12); color: #cbd5e1; }
+.layer-toggle svg { width: 12px; height: 12px; flex-shrink: 0; opacity: 0.6; transition: opacity 0.2s; }
+.layer-toggle span { flex: 1; }
 .layer-toggle.active {
     background: rgba(63, 81, 181, 0.15);
     border-color: rgba(63, 81, 181, 0.4);
     color: #e0e7ff;
 }
+.layer-toggle.active svg { opacity: 1; color: #3f51b5; }
 
-.layer-toggle.active svg {
-    opacity: 1;
-    color: #3f51b5;
-}
-
-.layer-toggle:focus {
-    outline: 2px solid #ec4899;
-    outline-offset: 1px;
-}
-
-.layer-toggle:focus:not(:focus-visible) {
-    outline: none;
-}
-
-/* Search box */
+/* Search box - Dynamic Scaling */
 .search-box {
     position: absolute;
-    top: 80px;
+    top: max(50px, 8vh); /* Scales with height, stops at 50px min */
     left: 50%;
     transform: translateX(-50%);
     background: #ffffff;
     border: none;
     padding: 0;
-    width: 520px;
+    width: var(--search-width); /* Dynamic width */
     z-index: 1000;
     border-radius: 14px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.1);
@@ -543,42 +386,28 @@ body {
 
 .search-input {
     width: 100%;
-    padding: 18px 24px;
+    padding: 1.2rem 1.5rem; /* rem padding */
     background: #ffffff;
     border: none;
     color: #1f2937;
-    font-size: 15px;
+    font-size: clamp(0.9rem, 1.2vw, 1.1rem); /* Fluid font size */
     border-radius: 14px;
     outline: none;
     font-family: system-ui, sans-serif;
     font-weight: 500;
 }
-
-.search-input::placeholder {
-    color: #9ca3af;
-    font-weight: 400;
-}
-
-.search-input:focus {
-    outline: 3px solid #ec4899;
-    outline-offset: -3px;
-}
-
-.search-input::-webkit-autofill {
-    -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
-}
+.search-input:focus { outline: 3px solid #ec4899; outline-offset: -3px; }
 
 .search-results {
     background: #ffffff;
     border-radius: 0 0 14px 14px;
-    max-height: 400px;
+    max-height: 40vh; /* Limits height based on screen size */
     overflow-y: auto;
-    margin: 0;
-    padding: 0;
+    margin: 0; padding: 0;
 }
 
 .search-result-item {
-    padding: 16px 24px;
+    padding: 1rem 1.5rem;
     background: #ffffff;
     border: none;
     border-top: 1px solid #f3f4f6;
@@ -586,98 +415,32 @@ body {
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
+.search-result-item:first-child { border-top: none; }
+.search-result-item:last-child { border-radius: 0 0 14px 14px; }
+.search-result-item:hover { background: #f9fafb; transform: translateX(4px); }
+.search-result-title { color: #1f2937; font-weight: 600; font-size: 0.9rem; margin: 0; padding: 0; }
+.search-result-address { color: #6b7280; font-size: 0.8rem; margin-top: 4px; padding: 0; }
 
-.search-result-item:first-child {
-    border-top: none;
-}
-
-.search-result-item:last-child {
-    border-radius: 0 0 14px 14px;
-}
-
-.search-result-item:hover {
-    background: #f9fafb;
-    transform: translateX(4px);
-}
-
-.search-result-title {
-    color: #1f2937;
-    font-weight: 600;
-    font-size: 14px;
-    margin: 0;
-    padding: 0;
-}
-
-.search-result-address {
-    color: #6b7280;
-    font-size: 12px;
-    margin-top: 4px;
-    padding: 0;
-}
-
-/* Info box */
 .info-box {
     margin-top: 8px;
     padding: 10px;
     background: rgba(30, 30, 30, 0.6);
     border-left: 2px solid #ec4899;
     border-radius: 5px;
-    font-size: 9px;
+    font-size: 0.75rem;
     color: #cbd5e1;
     line-height: 1.4;
 }
+.info-box strong { color: #f1f5f9; font-weight: 600; display: block; margin-top: 6px; font-size: 0.75rem; }
+.info-box small { color: #94a3b8; font-size: 0.65rem; line-height: 1.3; }
+.info-box em { color: #64748b; font-style: italic; display: block; margin-top: 6px; font-size: 0.65rem; }
 
-.info-box strong {
-    color: #f1f5f9;
-    font-weight: 600;
-    display: block;
-    margin-top: 6px;
-    font-size: 9px;
-}
-
-.info-box strong:first-child {
-    margin-top: 0;
-}
-
-.info-box small {
-    color: #94a3b8;
-    font-size: 8px;
-    line-height: 1.3;
-}
-
-.info-box em {
-    color: #64748b;
-    font-style: italic;
-    display: block;
-    margin-top: 6px;
-    font-size: 8px;
-}
-
-/* Search scrollbar */
-.search-results::-webkit-scrollbar {
-    width: 8px;
-}
-
-.search-results::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
-
-.search-results::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 4px;
-}
-
-.search-results::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-}
-
-/* Chatbot - BelaBot Icon */
 .chatbot-button {
     position: fixed;
-    bottom: 80px;
-    left: 20px;
-    width: 70px;
-    height: 70px;
+    bottom: max(60px, 8vh); /* Dynamic bottom positioning */
+    left: var(--spacing-base);
+    width: clamp(50px, 8vw, 70px); /* Scales with viewport width */
+    height: clamp(50px, 8vw, 70px);
     background: rgba(30, 30, 30, 1);
     border: 2px solid rgba(244, 114, 182, 0.3);
     border-radius: 50% 50% 50% 5px;
@@ -690,50 +453,20 @@ body {
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     overflow: hidden;
 }
-
-.chatbot-button.hidden {
-    display: none;
-}
-
 .chatbot-button:hover {
     transform: scale(1.1) translateY(-5px);
     border-color: #ec4899;
     box-shadow: 0 10px 40px rgba(236, 72, 153, 0.4);
 }
-
-.chatbot-button svg {
-    width: 65px;
-    height: 65px;
-    filter: drop-shadow(0 4px 5px rgba(0, 0, 0, 0.3));
-}
+.chatbot-button svg { width: 90%; height: 90%; filter: drop-shadow(0 4px 5px rgba(0, 0, 0, 0.3)); }
 
 /* BelaBot eye blink animation */
 @keyframes blink {
-
-    0%,
-    90%,
-    100% {
-        transform: scaleY(1);
-        opacity: 1;
-    }
-
-    92% {
-        transform: scaleY(0.1);
-        opacity: 0.7;
-    }
-
-    94% {
-        transform: scaleY(1);
-        opacity: 1;
-    }
+    0%, 90%, 100% { transform: scaleY(1); opacity: 1; }
+    92% { transform: scaleY(0.1); opacity: 0.7; }
+    94% { transform: scaleY(1); opacity: 1; }
 }
-
-.eye-glow {
-    animation: blink 3.5s infinite;
-    transform-origin: center;
-    filter: drop-shadow(0 0 2px #ec4899);
-}
-
+.eye-glow { animation: blink 3.5s infinite; transform-origin: center; filter: drop-shadow(0 0 2px #ec4899); }
 .hat-logo {
     font-family: Arial, sans-serif;
     font-weight: 900;
@@ -746,9 +479,9 @@ body {
 
 .chatbot-window {
     position: fixed;
-    bottom: 10px;
-    left: 20px;
-    width: 380px;
+    bottom: 20px;
+    left: var(--spacing-base);
+    width: clamp(300px, 90vw, 380px); /* Responsive width */
     height: auto;
     max-height: calc(100vh - 160px);
     background: rgba(15, 15, 15, 0.95);
@@ -761,26 +494,12 @@ body {
     flex-direction: column;
     overflow: hidden;
 }
+.chatbot-window.open { display: flex; animation: slideUp 0.3s ease; }
 
-.chatbot-window.open {
-    display: flex;
-    animation: slideUp 0.3s ease;
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
 .chatbot-header {
-    padding: 20px;
+    padding: 1.2rem;
     background: linear-gradient(135deg, #f472b6 0%, #ec4899 100%);
     color: #1a1a1a;
     display: flex;
@@ -789,500 +508,147 @@ body {
     gap: 12px;
     position: relative;
 }
-
-.belabot-header-icon {
-    width: 40px;
-    height: 40px;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-}
-
-/* Ensure eye animation works in header */
-.belabot-header-icon .eye-glow {
-    animation: blink 3.5s infinite;
-    transform-origin: center;
-}
-
-.chatbot-header h3 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 700;
-    color: #1a1a1a;
-}
-
+.belabot-header-icon { width: 40px; height: 40px; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2)); }
+.belabot-header-icon .eye-glow { animation: blink 3.5s infinite; transform-origin: center; }
+.chatbot-header h3 { margin: 0; font-size: 1.1rem; font-weight: 700; color: #1a1a1a; }
 .chatbot-header .close-btn {
-    background: none;
-    border: none;
-    color: #1a1a1a;
-    font-size: 24px;
-    cursor: pointer;
-    padding: 0;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 4px;
-    transition: background 0.2s;
-    position: absolute;
-    right: 20px;
+    background: none; border: none; color: #1a1a1a; font-size: 1.5rem; cursor: pointer;
+    padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+    border-radius: 4px; transition: background 0.2s; position: absolute; right: 20px;
 }
-
-.chatbot-header .close-btn:hover {
-    background: rgba(0, 0, 0, 0.1);
-}
+.chatbot-header .close-btn:hover { background: rgba(0, 0, 0, 0.1); }
 
 .chatbot-messages {
     flex: 0 1 auto;
     height: 400px;
     min-height: 0;
     overflow-y: auto;
-    padding: 16px;
+    padding: 1rem;
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
+.chat-message { max-width: 85%; padding: 12px 16px; border-radius: 12px; font-size: 0.9rem; line-height: 1.5; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.chat-message.user { align-self: flex-end; background: linear-gradient(135deg, #f472b6 0%, #ec4899 100%); color: #1a1a1a; border-bottom-right-radius: 4px; font-weight: 500; }
+.chat-message.ai { align-self: flex-start; background: #222; color: #e5e5e5; border: 1px solid #333; border-bottom-left-radius: 4px; }
+.chat-message.system { align-self: center; background: #1a1a1a; color: #888; font-size: 0.8rem; font-style: italic; border: 1px solid #2a2a2a; max-width: 90%; text-align: center; }
 
-.chatbot-messages::-webkit-scrollbar {
-    width: 6px;
-}
-
-.chatbot-messages::-webkit-scrollbar-track {
-    background: #1a1a1a;
-}
-
-.chatbot-messages::-webkit-scrollbar-thumb {
-    background: #444;
-    border-radius: 3px;
-}
-
-.chat-message {
-    max-width: 85%;
-    padding: 12px 16px;
-    border-radius: 12px;
-    font-size: 14px;
-    line-height: 1.5;
-    animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.chat-message.user {
-    align-self: flex-end;
-    background: linear-gradient(135deg, #f472b6 0%, #ec4899 100%);
-    color: #1a1a1a;
-    border-bottom-right-radius: 4px;
-    font-weight: 500;
-}
-
-.chat-message.ai {
-    align-self: flex-start;
-    background: #222;
-    color: #e5e5e5;
-    border: 1px solid #333;
-    border-bottom-left-radius: 4px;
-}
-
-.chat-message.system {
-    align-self: center;
-    background: #1a1a1a;
-    color: #888;
-    font-size: 12px;
-    font-style: italic;
-    border: 1px solid #2a2a2a;
-    max-width: 90%;
-    text-align: center;
-}
-
-.chatbot-input-area {
-    flex-shrink: 0;
-    padding: 12px;
-    background: #1a1a1a;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    display: flex;
-    gap: 8px;
-}
-
-.chatbot-input {
-    flex: 1;
-    padding: 10px 12px;
-    background: #222;
-    border: 1px solid #444;
-    border-radius: 8px;
-    color: white;
-    font-size: 13px;
-    outline: none;
-    font-family: system-ui, sans-serif;
-}
-
-.chatbot-input:focus {
-    border-color: #ec4899;
-}
-
-.chatbot-input::placeholder {
-    color: #666;
-}
-
+.chatbot-input-area { flex-shrink: 0; padding: 12px; background: #1a1a1a; border-top: 1px solid rgba(255, 255, 255, 0.1); display: flex; gap: 8px; }
+.chatbot-input { flex: 1; padding: 10px 12px; background: #222; border: 1px solid #444; border-radius: 8px; color: white; font-size: 0.85rem; outline: none; font-family: system-ui, sans-serif; }
+.chatbot-input:focus { border-color: #ec4899; }
 .chatbot-send-btn {
-    padding: 10px 16px;
-    background: linear-gradient(135deg, #f472b6 0%, #ec4899 100%);
-    border: none;
-    border-radius: 8px;
-    color: #1a1a1a;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s;
+    padding: 10px 16px; background: linear-gradient(135deg, #f472b6 0%, #ec4899 100%); border: none;
+    border-radius: 8px; color: #1a1a1a; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
 }
+.chatbot-send-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(236, 72, 153, 0.4); }
 
-.chatbot-send-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(236, 72, 153, 0.4);
-}
+.typing-indicator { display: flex; gap: 4px; padding: 12px 16px; background: #222; border: 1px solid #333; border-radius: 12px; border-bottom-left-radius: 4px; width: fit-content; }
+.typing-indicator span { width: 8px; height: 8px; background: #ec4899; border-radius: 50%; animation: typing 1.4s infinite; }
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typing { 0%, 60%, 100% { transform: translateY(0); opacity: 0.7; } 30% { transform: translateY(-10px); opacity: 1; } }
 
-.chatbot-send-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-}
-
-.typing-indicator {
-    display: flex;
-    gap: 4px;
-    padding: 12px 16px;
-    background: #222;
-    border: 1px solid #333;
-    border-radius: 12px;
-    border-bottom-left-radius: 4px;
-    width: fit-content;
-}
-
-.typing-indicator span {
-    width: 8px;
-    height: 8px;
-    background: #ec4899;
-    border-radius: 50%;
-    animation: typing 1.4s infinite;
-}
-
-.typing-indicator span:nth-child(2) {
-    animation-delay: 0.2s;
-}
-
-.typing-indicator span:nth-child(3) {
-    animation-delay: 0.4s;
-}
-
-@keyframes typing {
-
-    0%,
-    60%,
-    100% {
-        transform: translateY(0);
-        opacity: 0.7;
-    }
-
-    30% {
-        transform: translateY(-10px);
-        opacity: 1;
-    }
-}
-
-/* Compass */
 .compass-container {
     position: absolute;
-    top: 16px;
+    top: max(16px, 2vh);
     left: 50%;
     transform: translateX(-50%);
     z-index: 1002;
     pointer-events: none;
 }
-
 .compass-display {
     background: rgba(15, 15, 15, 0.85);
     border: 1px solid rgba(255, 255, 255, 0.08);
     padding: 8px 14px;
     border-radius: 20px;
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    color: #fff;
-    font-family: system-ui, sans-serif;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    display: flex; gap: 8px; align-items: center; color: #fff;
+    font-family: system-ui, sans-serif; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
+.compass-north { color: #ef4444; font-weight: 700; font-size: 14px; }
+.compass-bearing { font-family: 'Courier New', monospace; min-width: 40px; text-align: center; font-weight: 600; }
+.compass-divider { width: 1px; height: 20px; background: rgba(255, 255, 255, 0.08); }
 
-.compass-north {
-    color: #ef4444;
-    font-weight: 700;
-    font-size: 14px;
-}
-
-.compass-bearing {
-    font-family: 'Courier New', monospace;
-    min-width: 40px;
-    text-align: center;
-    font-weight: 600;
-}
-
-.compass-divider {
-    width: 1px;
-    height: 20px;
-    background: rgba(255, 255, 255, 0.08);
-}
-
-/* Map Metadata and Controls */
 .map-metadata {
-    position: absolute;
-    bottom: 20px;
-    left: 20px;
-    background: rgba(15, 15, 15, 0.88);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-size: 10px;
-    color: #94a3b8;
-    z-index: 5;
-    display: none;
+    position: absolute; bottom: 20px; left: 20px; background: rgba(15, 15, 15, 0.88); backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.08); padding: 8px 12px; border-radius: 8px; font-size: 0.7rem; color: #94a3b8; z-index: 5; display: none;
 }
-
-.data-timestamp {
-    display: block;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-}
+.data-timestamp { display: block; font-weight: 500; letter-spacing: 0.5px; }
 
 .map-controls-bar {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    z-index: 5;
+    position: absolute; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 5;
 }
-
 .map-control-btn {
-    background: rgba(15, 15, 15, 0.88);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    padding: 10px;
-    border-radius: 8px;
-    cursor: pointer;
-    color: #cbd5e1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    width: 40px;
-    height: 40px;
+    background: rgba(15, 15, 15, 0.88); border: 1px solid rgba(255, 255, 255, 0.08); padding: 10px; border-radius: 8px;
+    cursor: pointer; color: #cbd5e1; display: flex; align-items: center; justify-content: center; transition: all 0.2s; width: 40px; height: 40px;
 }
-
-.map-control-btn:hover {
-    background: rgba(15, 15, 15, 0.95);
-    border-color: rgba(255, 255, 255, 0.15);
-    color: #ffffff;
-}
+.map-control-btn:hover { background: rgba(15, 15, 15, 0.95); border-color: rgba(255, 255, 255, 0.15); color: #ffffff; }
 
 /* ============================================
    RESPONSIVE DESIGN - Mobile & Tablet
    ============================================ */
 
-/* Tablet Portrait and smaller (below 1024px) */
 @media (max-width: 1024px) {
-    .controls {
-        width: 240px;
+    .controls, .right-sidebar {
+        width: 240px; /* Fallback for older browsers */
+        width: clamp(220px, 25vw, 260px);
         padding: 12px;
     }
-    
-    .right-sidebar {
-        width: 240px;
-    }
-    
-    .search-box {
-        width: 400px;
-        top: 70px;
-    }
+    .search-box { width: 400px; top: 70px; }
 }
 
-/* Mobile Landscape and smaller (below 768px) */
 @media (max-width: 768px) {
     /* Move controls to bottom sheet style */
     .controls {
-        position: fixed;
-        top: auto;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        width: 100%;
-        max-height: 40vh;
-        overflow-y: auto;
-        border-radius: 16px 16px 0 0;
-        z-index: 100;
+        position: fixed; top: auto; bottom: 0; left: 0; right: 0; width: 100%;
+        max-height: 40vh; overflow-y: auto; border-radius: 16px 16px 0 0; z-index: 100;
+        animation: slideUp 0.3s ease;
     }
     
-    /* Stack right sidebar panels horizontally at bottom */
     .right-sidebar {
-        position: fixed;
-        top: auto;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        width: 100%;
-        height: auto;
-        max-height: 50vh;
-        flex-direction: row;
-        overflow-x: auto;
-        overflow-y: hidden;
-        padding: 1rem;
-        gap: 0.5rem;
-        display: none;
+        position: fixed; top: auto; bottom: 0; left: 0; right: 0; width: 100%; height: auto; max-height: 50vh;
+        flex-direction: row; overflow-x: auto; overflow-y: hidden; padding: 1rem; gap: 0.5rem; display: none;
     }
     
-    .right-sidebar .panel {
-        min-width: 280px;
-        max-height: 45vh;
-        overflow-y: auto;
-    }
+    .right-sidebar .panel { min-width: 280px; max-height: 45vh; overflow-y: auto; }
     
-    /* Compact search box */
-    .search-box {
-        width: calc(100% - 40px);
-        left: 20px;
-        right: 20px;
-        top: 60px;
-        transform: none;
-    }
+    .search-box { width: calc(100% - 40px); left: 20px; right: 20px; top: 60px; transform: none; }
+    .search-input { padding: 14px 16px; font-size: 14px; }
     
-    .search-input {
-        padding: 14px 16px;
-        font-size: 14px;
-    }
-    
-    /* Adjust compass */
-    .compass-container {
-        top: 12px;
-        left: 50%;
-        transform: translateX(-50%) scale(0.85);
-    }
+    .compass-container { top: 12px; transform: translateX(-50%) scale(0.85); }
     
     /* Move chatbot to bottom right */
-    .chatbot-button {
-        bottom: 80px;
-        left: auto;
-        right: 20px;
-        width: 60px;
-        height: 60px;
-    }
+    .chatbot-button { bottom: 80px; left: auto; right: 20px; width: 60px; height: 60px; }
+    .chatbot-button svg { width: 55px; height: 55px; }
     
-    .chatbot-button svg {
-        width: 55px;
-        height: 55px;
-    }
+    .chatbot-window { left: 10px; right: 10px; bottom: 10px; width: auto; max-height: calc(100vh - 120px); }
     
-    .chatbot-window {
-        left: 10px;
-        right: 10px;
-        bottom: 10px;
-        width: auto;
-        max-height: calc(100vh - 120px);
-    }
-    
-    /* Adjust map controls */
-    .map-controls-bar {
-        bottom: 80px;
-        right: 10px;
-    }
-    
-    .map-metadata {
-        bottom: 10px;
-        left: 10px;
-        font-size: 9px;
-        padding: 6px 10px;
-    }
+    .map-controls-bar { bottom: 80px; right: 10px; }
+    .map-metadata { bottom: 10px; left: 10px; font-size: 9px; padding: 6px 10px; }
 }
 
-/* Mobile Portrait (below 480px) */
 @media (max-width: 480px) {
-    .controls {
-        padding: 10px;
-        max-height: 35vh;
-    }
+    .controls { padding: 10px; max-height: 35vh; }
+    .controls h3 { font-size: 0.65rem; }
+    .filter-btn { padding: 12px 14px; font-size: 0.75rem; }
     
-    .controls h3 {
-        font-size: 10px;
-    }
+    .search-box { width: calc(100% - 20px); left: 10px; right: 10px; top: 50px; }
+    .search-input { padding: 12px 14px; font-size: 0.85rem; }
     
-    .filter-btn {
-        padding: 12px 14px;
-        font-size: 12px;
-    }
+    .compass-container { transform: translateX(-50%) scale(0.75); }
     
-    .search-box {
-        width: calc(100% - 20px);
-        left: 10px;
-        right: 10px;
-        top: 50px;
-    }
+    .chatbot-button { width: 50px; height: 50px; bottom: 70px; }
+    .chatbot-button svg { width: 45px; height: 45px; }
     
-    .search-input {
-        padding: 12px 14px;
-        font-size: 13px;
-    }
+    .chatbot-window { max-height: calc(100vh - 100px); }
+    .chatbot-messages { height: 300px; }
     
-    .compass-container {
-        transform: translateX(-50%) scale(0.75);
-    }
-    
-    .chatbot-button {
-        width: 50px;
-        height: 50px;
-        bottom: 70px;
-    }
-    
-    .chatbot-button svg {
-        width: 45px;
-        height: 45px;
-    }
-    
-    .chatbot-window {
-        max-height: calc(100vh - 100px);
-    }
-    
-    .chatbot-messages {
-        height: 300px;
-    }
-    
-    .map-control-btn {
-        width: 36px;
-        height: 36px;
-        padding: 8px;
-    }
-    
-    .map-controls-bar {
-        bottom: 70px;
-    }
+    .map-control-btn { width: 36px; height: 36px; padding: 8px; }
+    .map-controls-bar { bottom: 70px; }
 }
 
-/* Landscape orientation adjustments */
 @media (max-height: 600px) and (orientation: landscape) {
-    .controls {
-        max-height: 60vh;
-    }
-    
-    .chatbot-window {
-        max-height: calc(100vh - 80px);
-    }
-    
-    .chatbot-messages {
-        height: 250px;
-    }
+    .controls { max-height: 60vh; }
+    .chatbot-window { max-height: calc(100vh - 80px); }
+    .chatbot-messages { height: 250px; }
 }
