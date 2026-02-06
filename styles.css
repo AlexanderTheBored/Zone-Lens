@@ -66,6 +66,7 @@ body {
     align-items: center;
     gap: 8px;
     position: relative;
+    overflow: visible;
 }
 
 .control-help-text {
@@ -101,9 +102,22 @@ body {
     transform: scale(1.15);
 }
 
-.tooltip-icon::after {
-    content: attr(data-tooltip);
-    position: fixed; /* Fixed prevents clipping inside scrollable panels */
+/* Tooltip wrapper - actual DOM element */
+.tooltip-wrapper {
+    position: fixed;
+    z-index: 10000;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.3s;
+}
+
+.tooltip-wrapper.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.tooltip-content {
     background: linear-gradient(135deg, #f472b6 0%, #ec4899 100%);
     color: #1a1a1a;
     padding: 10px 14px;
@@ -113,53 +127,38 @@ body {
     line-height: 1.5;
     white-space: normal;
     width: 200px;
-    max-width: 200px;
     text-align: left;
-    opacity: 0;
-    pointer-events: none;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 10000;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
     text-transform: none;
     letter-spacing: 0.3px;
+    position: relative;
 }
 
-.tooltip-icon::before {
-    content: '';
-    position: absolute; /* Kept absolute relative to icon */
-    bottom: 50%;
-    left: calc(100% + 6px);
-    transform: translateY(50%);
+.tooltip-arrow {
+    position: absolute;
+    width: 0;
+    height: 0;
     border: 6px solid transparent;
-    border-right-color: #f472b6;
-    opacity: 0;
-    pointer-events: none;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 10001;
 }
 
-.tooltip-icon:hover::after,
-.tooltip-icon:hover::before {
-    opacity: 1;
-}
-
-.elevation-controls .tooltip-icon::after,
-.right-sidebar .tooltip-icon::after {
-    left: auto;
-    right: calc(100% + 12px);
-}
-
-.elevation-controls .tooltip-icon::before,
-.right-sidebar .tooltip-icon::before {
-    left: auto;
-    right: calc(100% + 6px);
-    border-right-color: transparent;
+.tooltip-arrow.left {
+    right: -12px;
+    top: 50%;
+    transform: translateY(-50%);
     border-left-color: #f472b6;
 }
 
+.tooltip-arrow.right {
+    left: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-right-color: #f472b6;
+}
+
 /* Make headings position relative to contain tooltips */
-.controls h3, .legend h4, .elevation-controls h3 {
+.controls h3, .legend h4, .elevation-controls h3, .panel h3, .panel h4 {
     position: relative;
+    overflow: visible;
 }
 
 .filter-visibility-toggle {
@@ -268,7 +267,7 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
     padding: 12px;
-    overflow: hidden;
+    overflow: visible;
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
@@ -287,6 +286,7 @@ body {
     align-items: center;
     gap: 6px;
     position: relative;
+    overflow: visible;
 }
 
 .panel h4 { font-size: 0.7rem; margin-top: 0; }

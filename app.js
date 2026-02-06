@@ -1543,3 +1543,74 @@ RESPONSE STYLE:
         }
     }
 });
+
+// ===== TOOLTIP SYSTEM =====
+// Create actual DOM elements for tooltips instead of using CSS pseudo-elements
+document.addEventListener('DOMContentLoaded', function() {
+    // Create tooltip container
+    const tooltipContainer = document.createElement('div');
+    tooltipContainer.id = 'tooltip-container';
+    document.body.appendChild(tooltipContainer);
+    
+    const tooltipIcons = document.querySelectorAll('.tooltip-icon');
+    
+    tooltipIcons.forEach(icon => {
+        const tooltipText = icon.getAttribute('data-tooltip');
+        if (!tooltipText) return;
+        
+        // Create tooltip wrapper
+        const wrapper = document.createElement('div');
+        wrapper.className = 'tooltip-wrapper';
+        
+        const content = document.createElement('div');
+        content.className = 'tooltip-content';
+        content.textContent = tooltipText;
+        
+        const arrow = document.createElement('div');
+        arrow.className = 'tooltip-arrow';
+        
+        content.appendChild(arrow);
+        wrapper.appendChild(content);
+        tooltipContainer.appendChild(wrapper);
+        
+        // Show tooltip on hover
+        icon.addEventListener('mouseenter', function() {
+            const rect = this.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            const isRightSide = rect.right > viewportWidth / 2;
+            
+            const tooltipWidth = 200;
+            const padding = 20;
+            
+            let left, top;
+            
+            if (isRightSide) {
+                // Show tooltip on left side
+                left = rect.left - tooltipWidth - padding;
+                arrow.className = 'tooltip-arrow left';
+            } else {
+                // Show tooltip on right side
+                left = rect.right + padding;
+                arrow.className = 'tooltip-arrow right';
+            }
+            
+            // Center tooltip vertically relative to icon
+            top = rect.top + (rect.height / 2) - (content.offsetHeight / 2);
+            
+            // Keep tooltip within viewport
+            if (top < 10) top = 10;
+            if (top + content.offsetHeight > window.innerHeight - 10) {
+                top = window.innerHeight - content.offsetHeight - 10;
+            }
+            
+            wrapper.style.left = left + 'px';
+            wrapper.style.top = top + 'px';
+            wrapper.classList.add('visible');
+        });
+        
+        // Hide tooltip on mouse leave
+        icon.addEventListener('mouseleave', function() {
+            wrapper.classList.remove('visible');
+        });
+    });
+});
