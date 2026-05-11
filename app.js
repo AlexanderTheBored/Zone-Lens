@@ -1200,6 +1200,41 @@ document.addEventListener('DOMContentLoaded', () => {
             return `Water bodies ${show ? 'shown' : 'hidden'}`;
         },
 
+        toggleContoursLayer: (show) => {
+            layerStates.contour = show;
+            if (show) {
+                if (!map.getLayer('contours')) {
+                    map.addLayer({
+                        id: 'contours',
+                        type: 'line',
+                        source: {
+                            type: 'vector',
+                            url: 'mapbox://mapbox.mapbox-terrain-v2'
+                        },
+                        'source-layer': 'contour',
+                        paint: {
+                            'line-color': '#22c55e',
+                            'line-width': [
+                                'case',
+                                ['==', ['%', ['get', 'ele'], 10], 0],
+                                1.2,
+                                0.6
+                            ],
+                            'line-opacity': 0.5
+                        }
+                    });
+                }
+                map.setLayoutProperty('contours', 'visibility', 'visible');
+                document.getElementById('contourBtn').classList.add('active');
+            } else {
+                if (map.getLayer('contours')) {
+                    map.setLayoutProperty('contours', 'visibility', 'none');
+                }
+                document.getElementById('contourBtn').classList.remove('active');
+            }
+            return `Elevation contours ${show ? 'shown' : 'hidden'}`;
+        },
+
         zoomToArea: (area) => {
             const locations = {
                 paknaan: { center: [123.940, 10.310], zoom: 15 },
@@ -1230,13 +1265,16 @@ document.addEventListener('DOMContentLoaded', () => {
         showAllLayers: () => {
             mapControls.toggleFloodLayer(true);
             mapControls.toggleWaterLayer(true);
+            mapControls.toggleTerrainLayer(true);
+            mapControls.toggleBuildingsLayer(true);
+            mapControls.toggleContoursLayer(true);
             return 'All visualization layers enabled';
         }
     };
 
-    // !!! IMPORTANT: UPDATE THIS URL WITH YOUR ACTUAL RENDER URL !!!
-    // It usually looks like: https://belabot-api.onrender.com/chat
-    const BACKEND_URL = "https://belabot.onrender.com/chat";
+    // !!! IMPORTANT: UPDATE THIS URL WITH YOUR ACTUAL CLOUDFLARE WORKER URL !!!
+    // It usually looks like: https://zonelens-worker.<username>.workers.dev
+    const BACKEND_URL = "https://zonelens-worker.lloydthomas54321.workers.dev";
 
     let conversationHistory = [];
 
@@ -1362,6 +1400,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 {
                     type: "function",
                     function: {
+                        name: "toggle_contours",
+                        description: "Show or hide topographic elevation contours",
+                        parameters: {
+                            type: "object",
+                            properties: {
+                                show: { type: "boolean", description: "true to show, false to hide" }
+                            },
+                            required: ["show"]
+                        }
+                    }
+                },
+                {
+                    type: "function",
+                    function: {
                         name: "zoom_to_area",
                         description: "Zoom the map to a specific area or barangay in Mandaue",
                         parameters: {
@@ -1381,7 +1433,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     type: "function",
                     function: {
                         name: "show_all_layers",
-                        description: "Enable all visualization layers (flood zones and water bodies)",
+                        description: "Enable all visualization layers (flood zones, water bodies, terrain, buildings, contours)",
                         parameters: { type: "object", properties: {} }
                     }
                 }
@@ -1484,6 +1536,9 @@ RESPONSE STYLE:
                             break;
                         case 'toggle_water_bodies':
                             result = mapControls.toggleWaterLayer(functionArgs.show);
+                            break;
+                        case 'toggle_contours':
+                            result = mapControls.toggleContoursLayer(functionArgs.show);
                             break;
                         case 'zoom_to_area':
                             result = mapControls.zoomToArea(functionArgs.area);
