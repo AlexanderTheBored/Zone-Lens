@@ -506,12 +506,31 @@ map.on('load', async () => {
     });
     layersLoaded.dem = true;
 
-    // - Jericho: Add flood risk source early to ensure it's available
+    // Fetch flood risk zones from PHP/MySQL API (replaces static flood-data.js)
+    // Uses bbox of current map view to avoid loading the full 60 MB dataset at once.
+    const bounds = map.getBounds();
+    const bbox   = [
+        bounds.getWest(), bounds.getSouth(),
+        bounds.getEast(), bounds.getNorth(),
+    ].map(v => v.toFixed(6)).join(',');
+
+    let floodRiskZones = { type: 'FeatureCollection', features: [] };
+    try {
+        const res = await fetch(`/api/flood-zones.php?bbox=${bbox}&limit=2000`);
+        if (res.ok) {
+            floodRiskZones = await res.json();
+        } else {
+            console.warn('⚠️ Flood risk API returned', res.status);
+        }
+    } catch (err) {
+        console.warn('⚠️ Could not load flood risk zones:', err);
+    }
+
     map.addSource('flood-risk', {
         type: 'geojson',
         data: floodRiskZones
     });
-    console.log('✅ Flood risk source added');
+    console.log(`✅ Flood risk source added (${floodRiskZones.features?.length ?? 0} zones)`);
 
     // Load real Mandaue Map V2 GeoJSON data
     await loadMandaueZonesV2();
